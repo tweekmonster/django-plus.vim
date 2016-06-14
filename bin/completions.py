@@ -44,8 +44,42 @@ else:
 
 from django.db.models.query import QuerySet
 from django.conf import global_settings
-from django.template.backends import django as tplbackend
-from django.template import library
+
+try:
+    from django.template import library
+    from django.template.backends import django as tplbackend
+
+    def import_library(module):
+        return library.import_library(module)
+
+    def get_installed_libraries():
+        for module in tplbackend.get_installed_libraries().values():
+            try:
+                yield library.import_library(module)
+            except library.InvalidTemplateLibrary:
+                continue
+
+except ImportError:
+    from pkgutil import walk_packages
+    from django.template import base as tplbase
+
+    def import_library(module):
+        return tplbase.import_library(module)
+
+    def get_installed_libraries():
+        for module in tplbase.get_templatetags_modules():
+            try:
+                pkg = tplbase.import_module(module)
+            except:
+                pass
+
+            for entry in walk_packages(pkg.__path__, pkg.__name__ + '.'):
+                try:
+                    module = tplbase.import_module(entry[1])
+                    if hasattr(module, 'register'):
+                        yield module.register
+                except ImportError:
+                    pass
 
 
 def func_signature(obj):
@@ -121,16 +155,11 @@ for item in dir(QuerySet):
         print('##' + item)
 
 
-print_tags(library.import_library('django.template.defaulttags').tags)
-print_filters(library.import_library('django.template.defaultfilters').filters)
+print_tags(import_library('django.template.defaulttags').tags)
+print_filters(import_library('django.template.defaultfilters').filters)
 
 
-for name, module in tplbackend.get_installed_libraries().items():
-    try:
-        lib = library.import_library(module)
-    except library.InvalidTemplateLibrary:
-        continue
-
+for lib in get_installed_libraries():
     print_tags(lib.tags)
     print_filters(lib.filters)
 

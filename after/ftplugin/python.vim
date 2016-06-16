@@ -27,13 +27,3 @@ if exists(':ImpSort')
           \ + get(g:, 'impsort_method_module', ['depth', 'length', 'alpha'])
   endif
 endif
-
-
-" Can't put this in a syntax script because `django` is not a python filetype.
-syntax match djangoQueryObject #\.objects\.#hs=s+1,he=e-1 containedin=TOP
-syntax match djangoModelsModule #\<models\.#he=e-1 containedin=TOP
-syntax match djangoModelField #\k\+Field\># containedin=TOP
-
-highlight default link djangoQueryObject Special
-highlight default link djangoModelsModule Special
-highlight default link djangoModelField Type

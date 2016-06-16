@@ -118,7 +118,7 @@ endfunction
 
 
 " Detect Django related files
-function! s:detect(filename) abort
+function! djangoplus#detect#filetype(filename) abort
   if empty(a:filename) || !filereadable(a:filename)
     return
   endif
@@ -136,31 +136,31 @@ function! s:detect(filename) abort
     let filedir = fnamemodify(a:filename, ':h')
 
     if a:filename =~? '\.html\?$'
-      setlocal filetype=htmldjango
+      setfiletype htmldjango
     elseif a:filename =~# '\<settings\.py$'
           \ || (filereadable(filedir.'/settings.py')
           \     && filereadable(filedir.'/../manage.py'))
+      setfiletype python
       let b:is_django_settings = 1
-    endif
-
-    for pat in get(g:, 'django_filetypes', [])
-      if a:filename =~# glob2regpat(pat)
-        let bft = &l:filetype
-        if !empty(bft)
-          let bft .= '.django'
-        else
-          let bft = 'django'
+    elseif a:filename =~# '\.py$'
+      setfiletype python
+    else
+      for pat in get(g:, 'django_filetypes', [])
+        if a:filename =~# glob2regpat(pat)
+          let bft = &l:filetype
+          if !empty(bft)
+            let bft .= '.django'
+          else
+            let bft = 'django'
+          endif
+          execute 'setfiletype' bft
         endif
-        execute 'setlocal filetype='.bft
-      endif
-    endfor
+      endfor
 
-    for ft in split(&l:filetype, '\.')
-      execute 'runtime! ftplugin/'.ft.'.vim'
-    endfor
+      for ft in split(&l:filetype, '\.')
+        execute 'runtime! ftplugin/'.ft.'.vim'
+        execute 'runtime! after/ftplugin/'.ft.'.vim'
+      endfor
+    endif
   endif
 endfunction
-
-
-" Since templates can be anything, check any file.
-autocmd BufRead,BufNewFile * call <sid>detect(expand('<afile>:p'))

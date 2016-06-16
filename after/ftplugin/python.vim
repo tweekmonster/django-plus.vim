@@ -13,3 +13,17 @@ if exists(':UltiSnipsAddFiletypes')
   " Add HTML snippets
   UltiSnipsAddFiletypes django
 endif
+
+
+if exists(':ImpSort')
+  function! s:django_sort(a, b) abort
+    return impsort#sort_top('^django', a:a, a:b)
+  endfunction
+
+  if get(g:, 'django_impsort_top', 1)
+    let b:impsort_method_group = [function('s:django_sort')]
+          \ + get(g:, 'impsort_method_group', ['length', 'alpha'])
+    let b:impsort_method_module = [function('s:django_sort')]
+          \ + get(g:, 'impsort_method_module', ['depth', 'length', 'alpha'])
+  endif
+endif

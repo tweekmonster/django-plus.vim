@@ -69,6 +69,18 @@ g:django_filetypes	A list of filename patterns.  Each pattern must be a
 			filetype incorrectly.  You could say that the built in
 			syntax script got it wrong, but it was wrong first.
 
+							*g:django_impsort_top*
+g:django_impsort_top	If enabled, configures |impsort| to sort Django
+			imports to the top of import groups.  Since this is
+			configured as an ftplugin and sets up buffer
+			variables, you must restart Vim for this to take
+			effect.
+
+			Requires `impsort.vim` to be installed.  
+			See: |django-plus-plugins|
+
+			Default: `1`
+
 
 ==============================================================================
 COMPLETIONS                                           *django-plus-completions*

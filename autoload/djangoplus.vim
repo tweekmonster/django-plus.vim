@@ -1,11 +1,11 @@
 let s:completion_script = expand('<sfile>:p:h:h').'/bin/completions.py'
+let s:template_finder_script = expand('<sfile>:p:h:h').'/bin/template_finder.py'
 let s:default_tags = [
       \ 'block', 'cache', 'for', 'if', 'with', 'autoescape',
       \ 'comment', 'filter', 'spaceless', 'verbatim']
 let s:default_tags_pat = join(s:default_tags, '\|')
 let s:midtags = '\(empty\|else\|elif\)'
-let s:template_path_enabled = executable('find')
-let s:template_path_exclusions = ['.hg', '.svn', '.git', 'node_modules']
+let s:template_shell_find_enabled = executable('python')
 
 
 function! s:get_completions() abort
@@ -76,6 +76,35 @@ function! s:default_completion(findstart, base) abort
 endfunction
 
 
+function! s:init_python() abort
+  let s:pydo = ''
+  if has('python3')
+    let s:pydo = 'py3do'
+    execute 'py3file' s:template_finder_script
+  elseif has('python')
+    let s:pydo = 'pydo'
+    execute 'pyfile' s:template_finder_script
+  endif
+endfunction
+
+
+function! s:get_templates() abort
+  if !exists('s:pydo')
+    call s:init_python()
+  endif
+
+  if !empty(s:pydo)
+    execute s:pydo 'djangoplus_find_templates("'.getcwd().'")'
+    return templates
+  else
+    if s:template_shell_find_enabled
+      return split(system('python "'.s:template_finder_script.'" "'.getcwd().'"'), "\n")
+    else
+    return []
+  endif
+endfunction
+
+
 " Completions for Django python and HTML files.
 function! djangoplus#complete(findstart, base) abort
   if !exists('b:orig_omnifunc')
@@ -118,6 +147,9 @@ function! djangoplus#complete(findstart, base) abort
         let s:do_mix = !has('nvim')
         let s:kind = 'qs'
         let source_set = 'queryset'
+      elseif line =~# '\<\%(render([^,]\+,\|get_template(\|render_to_string(\)\s*[''"]\zs\f*$'
+        let idx = match(line, '\f*$')
+        let s:kind = 'tpl'
       endif
     elseif &l:filetype =~# '\<htmldjango\>'
       if line =~# '{%\s\+\i*$'
@@ -128,9 +160,8 @@ function! djangoplus#complete(findstart, base) abort
         let idx = match(line, '|\zs\i*$')
         let s:kind = 'filt'
         let source_set = 'htmldjangofilters'
-      elseif s:template_path_enabled
-            \ && line =~# '{% \%(include\|extends\)\>\s\+[''"]\zs\f\+$'
-        let idx = match(line, '{% \%(include\|extends\)\>\s\+[''"]\zs\f\+$')
+      elseif line =~# '{% \%(include\|extends\)\>\s\+[''"]\zs\f*$'
+        let idx = match(line, '\f*$')
         let s:kind = 'tpl'
       endif
     endif
@@ -155,18 +186,8 @@ function! djangoplus#complete(findstart, base) abort
   elseif s:do_completion
     let completions = []
     if s:kind == 'tpl'
-      " Todo: Create inline python script to walk directories and use `find`
-      " as a fallback.
-      if !exists('s:templates')
-        let cwd = getcwd()
-        let cmd = 'find "'.getcwd().'" -maxdepth 10 -type f '
-              \ . '\( -path "*/'.join(s:template_path_exclusions, '/*" -o -path "*/').'" \) -prune '
-              \ . '-o -path "*/templates/*.*" -print'
-        let s:templates = split(system(cmd), "\n")
-      endif
-
-      for item in s:templates
-        let path = matchstr(item, '\<templates/\zs.*')
+      let templates = copy(s:get_templates())
+      for path in templates
         if stridx(path, a:base) == 0
           call add(completions, {
                 \ 'word': path,

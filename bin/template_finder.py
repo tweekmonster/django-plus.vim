@@ -27,6 +27,9 @@ def djangoplus_find_templates(cwd, cmdline=False):
 
             i = parts.index('templates')
             i += sum(len(x) for x in parts[:i+1]) + 1
+            directory = root[i:]
+            if directory:
+                templates.append('%s/' % directory)
             templates.extend(os.path.join(root, x)[i:] for x in files)
 
     try:

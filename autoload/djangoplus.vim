@@ -6,6 +6,13 @@ let s:default_tags = [
 let s:default_tags_pat = join(s:default_tags, '\|')
 let s:midtags = '\(empty\|else\|elif\)'
 let s:template_shell_find_enabled = executable('python')
+let s:template_functions = join([
+      \ 'render([^,]\+,',
+      \ 'get_template(',
+      \ 'render_to_string(',
+      \ 'render_to_response(',
+      \ 'template_name\s*=',
+      \ ], '\|')
 
 
 function! s:get_completions() abort
@@ -97,14 +104,24 @@ function! s:get_templates() abort
     call s:init_python()
   endif
 
+  let apppaths = join(map(copy(djangoplus#get_completions('apppaths')), 'v:val[0]'), ',')
+
   if !empty(s:pydo)
-    execute s:pydo 'djangoplus_find_templates("'.getcwd().'")'
+    " execute s:pydo 'app_paths = []'
+    " for item in apppaths
+    "   execute s:pydo 'add_app_path("'.item.'")'
+    " endfor
+    execute s:pydo 'djangoplus_find_templates("'.getcwd().'", "'.apppaths.'")'
   else
     if s:template_shell_find_enabled
       let s:template_cache = split(system('python "'.s:template_finder_script.'" "'.getcwd().'"'), "\n")
     else
       let s:template_cache = []
     endif
+  endif
+
+  if !exists('s:template_cache')
+    let s:template_cache = []
   endif
 
   return copy(s:template_cache)
@@ -158,7 +175,7 @@ function! djangoplus#complete(findstart, base) abort
         let s:do_mix = !has('nvim')
         let s:kind = 'qs'
         let source_set = 'queryset'
-      elseif line =~# '\<\%(render([^,]\+,\|get_template(\|render_to_string(\)\s*[''"]\zs\f*$'
+      elseif line =~# '\<\%('.s:template_functions.'\)\s*[''"]\zs\f*$'
         let idx = match(line, '\f*$')
         let s:kind = 'tpl'
       endif

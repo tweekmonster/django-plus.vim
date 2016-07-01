@@ -35,15 +35,39 @@ if django and '_DJANGOPLUS_MANAGEMENT' in os.environ:
                                      '*.py'))
     else:
         settings = []
+
+    from django.apps import apps
+
 else:
     django.setup = lambda: False
+
     from django.apps.registry import apps
+
     apps.apps_ready = True
     settings = []
 
-
-from django.db.models.query import QuerySet
 from django.conf import global_settings
+from django.core.exceptions import ImproperlyConfigured
+from django.db.models.query import QuerySet
+
+print('@@apppaths')
+for path in apps.get_app_paths():
+    print('##%s' % path)
+
+try:
+    from django.conf import settings as djsettings
+    tpldirs = set(getattr(djsettings, 'TEMPLATE_DIRS', []))
+    if not isinstance(tpldirs, set):
+        tpldirs = set()
+
+    for tplconf in getattr(djsettings, 'TEMPLATES', []):
+        if 'DIRS' in tplconf:
+            tpldirs.update(tplconf['DIRS'])
+
+    for tpldir in tpldirs:
+        print('##tpl|%s' % tpldir)
+except:
+    pass
 
 try:
     from django.template import library
@@ -56,11 +80,12 @@ try:
         for module in tplbackend.get_installed_libraries().values():
             try:
                 yield library.import_library(module)
-            except library.InvalidTemplateLibrary:
+            except (ImproperlyConfigured, library.InvalidTemplateLibrary):
                 continue
 
 except ImportError:
     from pkgutil import walk_packages
+
     from django.template import base as tplbase
 
     def import_library(module):
@@ -78,7 +103,7 @@ except ImportError:
                     module = tplbase.import_module(entry[1])
                     if hasattr(module, 'register'):
                         yield module.register
-                except ImportError:
+                except (ImproperlyConfigured, ImportError):
                     pass
 
 

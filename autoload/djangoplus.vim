@@ -157,12 +157,15 @@ function! djangoplus#complete(findstart, base) abort
     if s:kind == 'tpl'
       " Todo: Create inline python script to walk directories and use `find`
       " as a fallback.
-      let cwd = getcwd()
-      let cmd = 'find "'.getcwd().'" -maxdepth 4 -type f '
-            \ . '\( -path "*/'.join(s:template_path_exclusions, '" -o -path "*/').'" -prune \) '
-            \ . '-o -path "*/templates/*.*" -print'
-      let templates = system(cmd)
-      for item in split(templates, "\n")
+      if !exists('s:templates')
+        let cwd = getcwd()
+        let cmd = 'find "'.getcwd().'" -maxdepth 10 -type f '
+              \ . '\( -path "*/'.join(s:template_path_exclusions, '/*" -o -path "*/').'" \) -prune '
+              \ . '-o -path "*/templates/*.*" -print'
+        let s:templates = split(system(cmd), "\n")
+      endif
+
+      for item in s:templates
         let path = matchstr(item, '\<templates/\zs.*')
         if stridx(path, a:base) == 0
           call add(completions, {

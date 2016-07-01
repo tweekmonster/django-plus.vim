@@ -31,7 +31,7 @@ def djangoplus_find_templates(cwd, cmdline=False):
 
     try:
         import vim
-        vim.command('let templates = %s' % repr(templates).replace("u'", "'"))
+        vim.command('let s:template_cache = %s' % repr(templates).replace("u'", "'"))
     except ImportError:
         print('\n'.join(templates))
 

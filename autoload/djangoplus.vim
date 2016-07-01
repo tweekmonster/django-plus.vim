@@ -89,19 +89,30 @@ endfunction
 
 
 function! s:get_templates() abort
+  if exists('s:template_cache')
+    return s:template_cache
+  endif
+
   if !exists('s:pydo')
     call s:init_python()
   endif
 
   if !empty(s:pydo)
     execute s:pydo 'djangoplus_find_templates("'.getcwd().'")'
-    return templates
   else
     if s:template_shell_find_enabled
-      return split(system('python "'.s:template_finder_script.'" "'.getcwd().'"'), "\n")
+      let s:template_cache = split(system('python "'.s:template_finder_script.'" "'.getcwd().'"'), "\n")
     else
-    return []
+      let s:template_cache = []
+    endif
   endif
+
+  return copy(s:template_cache)
+endfunction
+
+
+function! djangoplus#clear_template_cache() abort
+  unlet! s:template_cache
 endfunction
 
 
@@ -186,7 +197,7 @@ function! djangoplus#complete(findstart, base) abort
   elseif s:do_completion
     let completions = []
     if s:kind == 'tpl'
-      let templates = copy(s:get_templates())
+      let templates = s:get_templates()
       for path in templates
         if stridx(path, a:base) == 0
           call add(completions, {

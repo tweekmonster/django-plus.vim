@@ -135,6 +135,8 @@ function! djangoplus#detect#filetype(filename) abort
     let b:is_django = 1
     let filedir = fnamemodify(a:filename, ':h')
 
+    autocmd! InsertLeave,CompleteDone <buffer> call djangoplus#clear_template_cache()
+
     if a:filename =~? '\.html\?$'
       setfiletype htmldjango
     elseif a:filename =~# '\<settings\.py$'

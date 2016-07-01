@@ -10,14 +10,15 @@ based on Steve Losh's `htmldjango` scripts.
 
 Django support in Vim sucks.
 
-| What Sucks?                                           | Sucks?  |
-| :---------------------------------------------------- | :-----: |
-| Hard-coded `htmldjango` filetype for any `.html` file | **Yes** |
-| HTML indentation                                      | **Yes** |
-| `QuerySet` completions                                | **Yes** |
-| `settings.py` variable completions                    | **Yes** |
-| Template tag and filter completions                   | **Yes** |
-| Template file completion for `include` and `extends`  | **Yes** |
+| What Sucks?                                                      | Sucks?  |
+|:-----------------------------------------------------------------|:-------:|
+| Hard-coded `htmldjango` filetype for any `.html` file            | **Yes** |
+| HTML indentation                                                 | **Yes** |
+| `QuerySet` completions                                           | **Yes** |
+| `settings.py` variable completions                               | **Yes** |
+| Template tag and filter completions                              | **Yes** |
+| Template file completion for `{% include %}` and `{% extends %}` | **Yes** |
+| Template file completion for rendering functions                 | **Yes** |
 
 To help you understand the difference this plugin makes, I used science:
 
@@ -52,6 +53,8 @@ A summary of improvements to Django development in Vim.
 
 * Completions for Django settings when `b:is_django_settings` is present.
 * Completions for `settings.` when `b:is_django` is present in a `.py` file.
+* Completions for template files when using `render()`, `get_template()`,
+  `render_to_string()`, `render_to_response()`, or `template_name =`.
 * QuerySets could be lurking anywhere.  That's why QuerySet completions will be
   included for basically anything after a period.
 * If you are using `Ultisnips`, Django snippets are enabled and
@@ -63,6 +66,7 @@ A summary of improvements to Django development in Vim.
 
 * The filetype is set to `htmldjango` when editing HTML files.
 * Basic completions for template tags and filters.
+* Completions for template files when using `{% extends %}` or `{% include %}`.
 * Django tags are indented correctly, including custom tags.
 * `matchit` configuration for Django tags, including custom tags.
   Additionally, the cursor is placed at the beginning of the tag name.

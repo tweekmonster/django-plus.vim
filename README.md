@@ -17,6 +17,7 @@ Django support in Vim sucks.
 | `QuerySet` completions                                | **Yes** |
 | `settings.py` variable completions                    | **Yes** |
 | Template tag and filter completions                   | **Yes** |
+| Template file completion for `include` and `extends`  | **Yes** |
 
 To help you understand the difference this plugin makes, I used science:
 

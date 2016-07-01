@@ -4,6 +4,8 @@ let s:default_tags = [
       \ 'comment', 'filter', 'spaceless', 'verbatim']
 let s:default_tags_pat = join(s:default_tags, '\|')
 let s:midtags = '\(empty\|else\|elif\)'
+let s:template_path_enabled = executable('find')
+let s:template_path_exclusions = ['.hg', '.svn', '.git', 'node_modules']
 
 
 function! s:get_completions() abort
@@ -126,6 +128,10 @@ function! djangoplus#complete(findstart, base) abort
         let idx = match(line, '|\zs\i*$')
         let s:kind = 'filt'
         let source_set = 'htmldjangofilters'
+      elseif s:template_path_enabled
+            \ && line =~# '{% \%(include\|extends\)\>\s\+[''"]\zs\f\+$'
+        let idx = match(line, '{% \%(include\|extends\)\>\s\+[''"]\zs\f\+$')
+        let s:kind = 'tpl'
       endif
     endif
 
@@ -148,19 +154,42 @@ function! djangoplus#complete(findstart, base) abort
     endif
   elseif s:do_completion
     let completions = []
-    for item in s:source
-      let word = matchstr(item[0], s:word_pattern)
-      if word =~? '^'.a:base
-        call add(completions, {
-              \ 'word': word,
-              \ 'abbr': item[0].(s:do_assignment ? ' = ' : ''),
-              \ 'info': item[0]."\n\n".item[1],
-              \ 'icase': 0,
-              \ 'kind': s:kind,
-              \ 'menu': '[Dj+]',
-              \ })
-      endif
-    endfor
+    if s:kind == 'tpl'
+      " Todo: Create inline python script to walk directories and use `find`
+      " as a fallback.
+      let cwd = getcwd()
+      let cmd = 'find "'.getcwd().'" -maxdepth 4 -type f '
+            \ . '\( -path "*/'.join(s:template_path_exclusions, '" -o -path "*/').'" -prune \) '
+            \ . '-o -path "*/templates/*.*" -print'
+      let templates = system(cmd)
+      for item in split(templates, "\n")
+        let path = matchstr(item, '\<templates/\zs.*')
+        if stridx(path, a:base) == 0
+          call add(completions, {
+                \ 'word': path,
+                \ 'abbr': path,
+                \ 'info': path,
+                \ 'icase': 0,
+                \ 'kind': s:kind,
+                \ 'menu': '[Dj+]',
+                \ })
+        endif
+      endfor
+    else
+      for item in s:source
+        let word = matchstr(item[0], s:word_pattern)
+        if word =~? '^'.a:base
+          call add(completions, {
+                \ 'word': word,
+                \ 'abbr': item[0].(s:do_assignment ? ' = ' : ''),
+                \ 'info': item[0]."\n\n".item[1],
+                \ 'icase': 0,
+                \ 'kind': s:kind,
+                \ 'menu': '[Dj+]',
+                \ })
+        endif
+      endfor
+    endif
 
     if s:do_mix
       let orig_base = strpart(getline(v:lnum), s:orig_omnifunc_start)

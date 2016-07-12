@@ -3,6 +3,10 @@ if exists('b:did_django_ftplugin') || !exists('b:is_django')
 endif
 let b:did_django_ftplugin = 1
 let b:orig_omnifunc = &l:omnifunc
+if !has('python') && b:orig_omnifunc ==# 'pythoncomplete#Complete'
+  let b:orig_omnifunc = ''
+endif
+
 setlocal omnifunc=djangoplus#complete
 
 

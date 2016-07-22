@@ -30,7 +30,10 @@ if django and '_DJANGOPLUS_MANAGEMENT' in os.environ:
         if base not in sys.path:
             sys.path.insert(0, base)
 
-        django.setup()
+        try:
+            django.setup()
+        except:
+            pass
         path_components = [base] + settings_module.split('.')[:-1] + ['*.py']
         settings = glob(os.path.join(*path_components))
     else:
@@ -47,12 +50,15 @@ else:
     settings = []
 
 from django.conf import global_settings
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, AppRegistryNotReady
 from django.db.models.query import QuerySet
 
 print('@@apppaths')
-for path in apps.get_app_paths():
-    print('##%s' % path)
+try:
+    for path in apps.get_app_paths():
+        print('##%s' % path)
+except AppRegistryNotReady:
+    pass
 
 try:
     from django.conf import settings as djsettings
@@ -184,9 +190,12 @@ print_tags(import_library('django.template.defaulttags').tags)
 print_filters(import_library('django.template.defaultfilters').filters)
 
 
-for lib in get_installed_libraries():
-    print_tags(lib.tags)
-    print_filters(lib.filters)
+try:
+    for lib in get_installed_libraries():
+        print_tags(lib.tags)
+        print_filters(lib.filters)
+except AppRegistryNotReady:
+    pass
 
 # Make sure the completion parser finishes
 print('##')

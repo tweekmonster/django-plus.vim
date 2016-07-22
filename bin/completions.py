@@ -31,8 +31,8 @@ if django and '_DJANGOPLUS_MANAGEMENT' in os.environ:
             sys.path.insert(0, base)
 
         django.setup()
-        settings = glob(os.path.join(base, settings_module.split('.')[0],
-                                     '*.py'))
+        path_components = [base] + settings_module.split('.')[:-1] + ['*.py']
+        settings = glob(os.path.join(*path_components))
     else:
         settings = []
 

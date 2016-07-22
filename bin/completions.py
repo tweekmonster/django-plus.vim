@@ -20,9 +20,9 @@ if django and '_DJANGOPLUS_MANAGEMENT' in os.environ:
     script = os.getenv('_DJANGOPLUS_MANAGEMENT')
     base = os.path.dirname(script)
     with open(script) as fp:
-        m = re.search(r'"DJANGO_SETTINGS_MODULE",\s+"([^"]+)"', fp.read())
+        m = re.search(r'(["\'])DJANGO_SETTINGS_MODULE\1,\s+(["\'])([^\2]+)\2', fp.read())
         if m:
-            settings_module = m.group(1)
+            settings_module = m.group(3)
         os.environ['DJANGO_SETTINGS_MODULE'] = settings_module
     if settings_module:
         os.chdir(base)

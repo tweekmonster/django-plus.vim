@@ -113,7 +113,8 @@ function! s:simple_django_project(filename)
     let s:seen[cwd] = s:is_django_project(cwd)
   endif
 
-  return s:seen[cwd] ? a:filename =~# '^'.cwd.'/' : -1
+  let sep = expand('/') == '\' ? '\\' : '/'
+  return s:seen[cwd] ? a:filename =~# '^'.escape(cwd, '.\^$[]').sep : -1
 endfunction
 
 

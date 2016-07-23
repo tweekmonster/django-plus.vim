@@ -18,7 +18,7 @@ except ImportError:
 
 if django and '_DJANGOPLUS_MANAGEMENT' in os.environ:
     script = os.getenv('_DJANGOPLUS_MANAGEMENT')
-    base = os.path.dirname(script)
+    base = os.path.abspath(os.path.dirname(script))
     settings_module = ''
 
     with open(script) as fp:

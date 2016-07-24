@@ -18,6 +18,9 @@ let s:django_app_dirs = [
       \ 'templates',
       \ ]
 
+let s:pathsep = expand('/')
+let s:pathsep_p = escape(s:pathsep, '\')
+
 
 " Test a file name to see if it's a python module.
 function! s:has_module(dirname, module)
@@ -33,6 +36,58 @@ function! s:is_django_project(dirname)
     return 1
   endif
   return 0
+endfunction
+
+
+function! s:settings_path() abort
+  if exists('s:django_conf_path')
+    return s:django_conf_path
+  endif
+
+  if !exists('$_DJANGOPLUS_MANAGEMENT') || !filereadable($_DJANGOPLUS_MANAGEMENT)
+    return ''
+  endif
+
+  for line in readfile($_DJANGOPLUS_MANAGEMENT)
+    let module = matchstr(line,
+          \ '\(["'']\)DJANGO_SETTINGS_MODULE\1,'
+          \.'\s*\(["'']\)\zs\%(\2\@!.\)\+\ze\2')
+
+    if !empty(module)
+      if module =~# '\.'
+        let module_path = join(split(module, '\.'), s:pathsep)
+      else
+        let module_path = module
+      endif
+
+      let module_path = fnamemodify($_DJANGOPLUS_MANAGEMENT, ':h')
+            \.s:pathsep.module_path
+      let conf_path = ''
+
+      if filereadable(module_path.'.py')
+        let conf_path = fnamemodify(module_path, ':h')
+      elseif filereadable(module_path.'/__init__.py')
+        let conf_path = module_path
+      endif
+
+      if !empty(conf_path)
+        let s:django_conf_path = conf_path
+        return s:django_conf_path
+      endif
+    endif
+  endfor
+
+  return ''
+endfunction
+
+
+function! s:is_django_settings(filename) abort
+  let settings_path = s:settings_path()
+  if empty(settings_path)
+    return 0
+  endif
+
+  return a:filename =~# '^'.settings_path.s:pathsep_p
 endfunction
 
 
@@ -113,8 +168,7 @@ function! s:simple_django_project(filename)
     let s:seen[cwd] = s:is_django_project(cwd)
   endif
 
-  let sep = expand('/') == '\' ? '\\' : '/'
-  return s:seen[cwd] ? a:filename =~# '^'.escape(cwd, '.\^$[]').sep : -1
+  return s:seen[cwd] ? a:filename =~# '^'.escape(cwd, '.\^$[]').s:pathsep_p : -1
 endfunction
 
 
@@ -140,9 +194,7 @@ function! djangoplus#detect#filetype(filename) abort
 
     if a:filename =~? '\.html\?$'
       setfiletype htmldjango
-    elseif a:filename =~# '\<settings\.py$'
-          \ || (filereadable(filedir.'/settings.py')
-          \     && filereadable(filedir.'/../manage.py'))
+    elseif s:is_django_settings(a:filename)
       setfiletype python
       let b:is_django_settings = 1
     elseif a:filename =~# '\.py$'

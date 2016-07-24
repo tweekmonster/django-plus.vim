@@ -174,7 +174,7 @@ endfunction
 
 " Detect Django related files
 function! djangoplus#detect#filetype(filename) abort
-  if empty(a:filename) || !filereadable(a:filename)
+  if empty(a:filename)
     return
   endif
 

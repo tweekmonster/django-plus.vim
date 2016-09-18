@@ -11,10 +11,7 @@ setlocal omnifunc=djangoplus#complete
 
 
 if exists(':UltiSnipsAddFiletypes')
-  " Ensure UltiSnipsEdit opens the htmldjango.snippets file
-  call UltiSnips#FileTypeChanged()
-
-  " Add HTML snippets
+  " Add Django snippets
   UltiSnipsAddFiletypes django
 endif
 

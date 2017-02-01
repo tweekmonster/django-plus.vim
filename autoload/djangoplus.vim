@@ -72,7 +72,12 @@ endfunction
 " Run the existing omnifunc if it exists.
 function! s:default_completion(findstart, base) abort
   if exists('b:orig_omnifunc') && !empty(b:orig_omnifunc)
-    return call(b:orig_omnifunc, [a:findstart, a:base])
+    " Restore the view after calling the original omnifunc.
+    " It seems that cursor could move in the function while using Deoplete.
+    let view = winsaveview()
+    let ret = call(b:orig_omnifunc, [a:findstart, a:base])
+    call winrestview(view)
+    return ret
   endif
 
   if a:findstart == 1
@@ -135,11 +140,7 @@ endfunction
 
 " Completions for Django python and HTML files.
 function! djangoplus#complete(findstart, base) abort
-  if !exists('b:orig_omnifunc')
-    return s:default_completion(a:findstart, a:base)
-  endif
-
-  if !exists('b:is_django')
+  if !exists('b:orig_omnifunc') || !exists('b:is_django')
     return s:default_completion(a:findstart, a:base)
   endif
 

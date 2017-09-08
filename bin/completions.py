@@ -22,7 +22,7 @@ if django and '_DJANGOPLUS_MANAGEMENT' in os.environ:
     settings_module = ''
 
     with open(script) as fp:
-        m = re.search(r'(["\'])DJANGO_SETTINGS_MODULE\1,\s+(["\'])([^\2]+)\2', fp.read())
+        m = re.search(r'(["\'])DJANGO_SETTINGS_MODULE\1,\s+(["\'])([^\2]+?)\2', fp.read())
         if m:
             settings_module = m.group(3)
         os.environ['DJANGO_SETTINGS_MODULE'] = settings_module
@@ -58,8 +58,8 @@ from django.db.models.query import QuerySet
 
 print('@@apppaths')
 try:
-    for path in apps.get_app_paths():
-        print('##%s' % path)
+    for app_config in apps.get_app_configs():
+        print('##%s' % app_config.path)
 except AppRegistryNotReady:
     pass
 

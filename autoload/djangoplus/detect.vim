@@ -31,7 +31,7 @@ endfunction
 
 " Test a directory for a management script>
 function! s:is_django_project(dirname)
-  if filereadable(a:dirname.'/manage.py')
+  if a:dirname != '/' && filereadable(a:dirname.'/manage.py')
     let $_DJANGOPLUS_MANAGEMENT = a:dirname.'/manage.py'
     return 1
   endif
